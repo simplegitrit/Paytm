@@ -8,6 +8,17 @@ mongoose.connect('mongodb+srv://harshitamore16:Harshita16@cluster0.p1hfn8w.mongo
 })
 
 const userSchema = new mongoose.Schema({
+
+    username:{
+        type: String,
+        required: true
+    },
+
+    password:{
+        type: String,
+        required: true
+    },
+
     first_name:{
         type: String,
         required: true
@@ -16,15 +27,25 @@ const userSchema = new mongoose.Schema({
     last_name:{
         type: String,
         required: true
-    },
+    }
+});
 
-    password:{
-        type: String,
+const accountSchema = new mongoose.Schema({
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    balance:{
+        type: Number,
         required: true
     }
-})
+});
 
+const Account = mongoose.model('Account' , accountSchema);
 const User = mongoose.model("User",userSchema)
 module.exports = {
-    User
-}
+    User,
+    Account,
+};
+
