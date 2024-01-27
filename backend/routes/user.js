@@ -1,6 +1,6 @@
 const express = require('express');
 const zod = require('zod');
-const {User , Account } = require( '../db ')
+const { User , Account } = require('../db')
 const JWT_SECRET = require('../config');
 const jwt = require('jsonwebtoken');
 const { authMiddleware } = require('../middleware');
@@ -8,46 +8,51 @@ const { authMiddleware } = require('../middleware');
 const router = express.Router();
 
 const signupSchema = zod.object({
-    username : zod.string(),
+    username : zod.string().email(),
     first_name : zod.string(),
     last_name : zod.string(),
     password : zod.string()
+    
 })
 
 router.post("/signup" , async (req,res) => {
-    const body = req.body;
-
-    const { success } = signupSchema.safeParse(req.body);
-
-    if(!success){
-        res.json({
-            message: "Incorrect input"
+    const { success } = signupSchema.safeParse(req.body)
+    if (!success) {
+        return res.status(411).json({
+            message: "Email already taken / Incorrect inputs"
         })
     }
 
-    const user = User.findOne({
-        username : body.username
+    const existingUser = await User.findOne({
+        username: req.body.username
     })
 
-    if(user._id){
-        return res.json({
-            message: "Incorrect input"
+    if (existingUser) {
+        return res.status(411).json({
+            message: "Email already taken/Incorrect inputs"
         })
     }
 
-    const dbUser = await User.create(body);
+    const user = await User.create({
+        username: req.body.username,
+        password: req.body.password,
+        first_name: req.body.first_name,
+        last_name: req.body.last_name,
+    })
+    const userId = user._id;
 
     await Account.create({
         userId,
-        balance: 1 + Math.random()*10000
+        balance: 1 + Math.random() * 10000
     })
+
     const token = jwt.sign({
-        userId: dbUser._id
-    }, JWT_SECRET)
+        userId
+    }, JWT_SECRET);
 
     res.json({
-        message: "USer created successfully",
-        token : token
+        message: "User created successfully",
+        token: token
     })
 
 })
